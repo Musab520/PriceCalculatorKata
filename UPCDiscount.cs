@@ -8,12 +8,14 @@ namespace PriceCalculatorKata
 {
     public class UPCDiscount
     {
-        public float discount { get; set; }
+        public double discount { get; set; }
         public int UPC { get; set; }
-        public UPCDiscount(float discount, int UPC)
+        public bool BeforeOrAfterTax = false;
+        public UPCDiscount(double discount, int UPC,bool bfaft)
         {
             this.discount = discount;
             this.UPC = UPC;
+            this.BeforeOrAfterTax = bfaft;
         }     
     }
 

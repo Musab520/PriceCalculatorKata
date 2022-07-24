@@ -6,7 +6,7 @@ namespace PriceCalculatorKata
     {
         public List<UPCDiscount> upcRepo = new List<UPCDiscount>
         {
-            new UPCDiscount(0.07f,12345),new UPCDiscount(0.5f,12346),new UPCDiscount(0.6f,12347)
+            new UPCDiscount(0.07,12345,false),new UPCDiscount(0.5,12346,true),new UPCDiscount(0.6,12347,false)
         };
         
 
