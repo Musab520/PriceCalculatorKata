@@ -12,7 +12,6 @@ namespace PriceCalculatorKata
         public string Name { get; set; }
         public int UPC { get; set; }
         public double price { get; set; }
-        
         public Product(string name, int upc, double price)
         {
             Name = name;
