@@ -9,6 +9,5 @@ class Program
         PriceCalculator calc=new PriceCalculator(0.2,0.15,p1);
         UPCRepo repo=new UPCRepo();
         Console.WriteLine(calc.PrintInfo(repo));
-        Console.WriteLine(calc.Report());
     }
 }

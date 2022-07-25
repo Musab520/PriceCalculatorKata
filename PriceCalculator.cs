@@ -11,31 +11,52 @@ namespace PriceCalculatorKata
     {
         private double taxPercentage { get; set; }
         private double discountPercentage { get; set; }
-        private float tax { get; set; }
-        private float uniDiscount { get; set; }
-        private float upcDiscount { get; set; }
+        private double upcDiscountPercentage { get; set; }
+        private float currPrice = 0;
+        private float currTax = 0;
+        private float currUniDiscount = 0;
+        private float currUPCDiscount = 0;
         private Product product { get;set; }
         public PriceCalculator(double taxPercentage,double discountPercentage,Product p)
         {
             this.taxPercentage = taxPercentage;
             this.discountPercentage = discountPercentage;   
             product=p;
-            tax = CalculatePercentage(taxPercentage, p.price);
-            uniDiscount=CalculatePercentage(discountPercentage, p.price);
         }
         public float CalculatePercentage(double percentage, double price)
         {
             return (float)Math.Round(price * percentage, 2);
         }
-        public float CalculatePriceAfter(double percentage, double price)
+        public float TotalPriceAfter(bool beforeOrafter)
         {
-            return (float)(Math.Round(price * percentage, 2) + price);
-        }
-        public float TotalPriceAfter(float tax,float uniDiscount,double price,float discountUPC)
-        {
-            float priceAfter= (float)(Math.Round(price + tax - uniDiscount- discountUPC,2));
+            ClearValues();
+            if (beforeOrafter)
+            {
+                currTax = CalculatePercentage(taxPercentage, product.price);
+                currUniDiscount = CalculatePercentage(discountPercentage, product.price);
+                currUPCDiscount=CalculatePercentage(upcDiscountPercentage, product.price);
+                currPrice = currTax;
+                currPrice = currPrice - currUniDiscount;
+                currPrice = currPrice - currUPCDiscount;
+            }
+            else
+            {
+                currUPCDiscount = CalculatePercentage(upcDiscountPercentage, product.price);
+                currPrice = (float)product.price - CalculatePercentage(upcDiscountPercentage,product.price);
+                currTax = CalculatePercentage(taxPercentage, currPrice);
+                currUniDiscount = CalculatePercentage(discountPercentage, currPrice);
+                currPrice = currPrice + currTax;
+                currPrice = currPrice - currUniDiscount;
+            }
           
-            return priceAfter;
+            return (float)Math.Round(currPrice,2);
+        }
+        public void ClearValues()
+        {
+            currPrice = 0;
+            currUPCDiscount = 0;
+            currTax = 0;
+            currUniDiscount = 0;
         }
         public string PrintInfo(UPCRepo repo)
         {
@@ -48,22 +69,29 @@ namespace PriceCalculatorKata
                     break;
                 }
             }
+            bool beforeOrAfter = false;
             if (upcD != null)
             {
-                upcDiscount = CalculatePercentage(upcD.discount, product.price);
+                upcDiscountPercentage = upcD.discount;
+                beforeOrAfter = upcD.BeforeOrAfterTax;
             }
+            else
+            {
+                upcDiscountPercentage = 0;
+            }
+            float total = TotalPriceAfter(beforeOrAfter);
             return $"Sample product: Book with name = “{product.Name}”, UPC={product.UPC}, price=${product.price}, \n" +
-                $"Tax={taxPercentage*100}%,universal discount={discountPercentage*100}%,UPC-Discount={upcD.discount*100}% for UPC={product.UPC} \n" +
-                $"Tax Amount= {tax}, Universal Discount Amount={uniDiscount}, UPC Discount={upcDiscount} \n" +
-                $"Price Before= ${product.price} Price After= ${TotalPriceAfter(tax,uniDiscount,product.price,upcDiscount)} \n" +
-                $"Total Discount Amount={uniDiscount+upcDiscount}";
+                $"Tax={taxPercentage*100}%,universal discount={discountPercentage*100}%,UPC-Discount={Math.Round(upcDiscountPercentage*100,2)}% for UPC={product.UPC} \n" +
+                $"Tax Amount= {currTax}$, Universal Discount Amount={currUniDiscount}$, UPC Discount={currUPCDiscount}$ \n" +
+                $"Price Before= ${product.price} Price After= ${total} \n" +
+                $"Total Discount Amount={currUniDiscount+currUPCDiscount}$";
         }
 
         public string Report()
         {
             return $"Tax = {taxPercentage*100}%, discount = {discountPercentage*100}% \n" +
                 $"Program prints price ${product.price} \n" +
-                $"Program displays ${uniDiscount+upcDiscount} amount which was deduced";
+                $"Program displays ${currUniDiscount+currUPCDiscount} amount which was deduced";
         }
 
     }
