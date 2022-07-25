@@ -12,11 +12,13 @@ namespace PriceCalculatorKata
         public string Name { get; set; }
         public int UPC { get; set; }
         public double price { get; set; }
-        public Product(string name, int upc, double price)
+        public string currency { get; set; }    
+        public Product(string name, int upc, double price,string currency)
         {
             Name = name;
             UPC = upc;
             this.price = price;
+            this.currency = currency;
         }
         public override string ToString()
         {
