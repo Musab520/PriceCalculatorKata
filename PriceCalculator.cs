@@ -16,6 +16,7 @@ namespace PriceCalculatorKata
         private double upcDiscountPercentage { get; set; }
         private UPCRepo upcRepo=new UPCRepo();
         private CostRepo costRepo = new CostRepo();
+        private Cap cap = new Cap(0.2,true);
         private float currPrice = 0;
         private float currTax = 0;
         private float currUniDiscount = 0;
@@ -44,10 +45,8 @@ namespace PriceCalculatorKata
                     choice = Console.ReadLine();
                 }
                 currTax = CalculatePercentage(taxPercentage, product.price);
-                if (choice.Equals("1")) { AdditiveDiscounts(); } else { MultiplicativeDiscounts();};
                 currPrice =(float) product.price+currTax;
-                currPrice = currPrice - currUniDiscount;
-                currPrice = currPrice - currUPCDiscount;
+                if (choice.Equals("1")) { AdditiveDiscounts(); } else { MultiplicativeDiscounts(); };
                 IEnumerable<Cost> list = costRepo.costRepo.Select(cost => cost).Where(cost => cost.upc == product.UPC);
                 foreach (Cost c in list)
                 {
@@ -57,9 +56,11 @@ namespace PriceCalculatorKata
             else
             {
                 MultiplicativeDiscounts();
+                float capper = cap.isPercent ? (float)(cap.amount * product.price) : (float)cap.amount;
+                currUniDiscount = CalculatePercentage(discountPercentage, currPrice);
+                currPrice = currUniDiscount + currUPCDiscount <= capper ? currPrice - currUniDiscount : (float)product.price - capper;
                 currTax = CalculatePercentage(taxPercentage, currPrice);
                 currPrice = currPrice + currTax;
-                currPrice = currPrice - currUniDiscount;
                 IEnumerable<Cost> list = costRepo.costRepo.Select(cost => cost).Where(cost => cost.upc == product.UPC);
                 foreach (Cost c in list)
                 {
@@ -73,13 +74,22 @@ namespace PriceCalculatorKata
         {
             currUniDiscount = CalculatePercentage(discountPercentage, product.price);
             currUPCDiscount = CalculatePercentage(upcDiscountPercentage, product.price);
+            float capper = cap.isPercent ? (float)(cap.amount * product.price) : (float)cap.amount;
+            if (currUniDiscount + currUPCDiscount <= capper)
+            {
+                currPrice = currPrice - currUniDiscount;
+                currPrice = currPrice - currUPCDiscount;
+            }
+            else
+            {
+                currPrice -= capper;
+            }
         }
 
         public void MultiplicativeDiscounts()
         {
             currUPCDiscount = CalculatePercentage(upcDiscountPercentage, product.price);
-            currPrice = (float)product.price - CalculatePercentage(upcDiscountPercentage, product.price);
-            currUniDiscount = CalculatePercentage(discountPercentage, currPrice);
+            currPrice = (float)product.price - currUPCDiscount;
         }
         public void ClearValues()
         {
@@ -115,9 +125,11 @@ namespace PriceCalculatorKata
 
         public string Report(float total)
         {
+            float capper = cap.isPercent ? (float)(cap.amount * product.price) : (float)cap.amount;
+            float totalDiscounts= capper>=currUniDiscount+currUPCDiscount ? currUniDiscount + currUPCDiscount : capper;
             string report= $"Cost = ${product.price} \n" +
                 $"Tax = ${currTax} \n" +
-                $"Discounts = ${currUPCDiscount + currUniDiscount} \n";
+                $"Discounts = ${ totalDiscounts } \n";
                 IEnumerable<Cost> list = costRepo.costRepo.Select(cost => cost).Where(cost=>cost.upc==product.UPC);
                  foreach (Cost cost in list)
             {
