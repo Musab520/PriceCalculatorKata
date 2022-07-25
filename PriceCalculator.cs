@@ -3,15 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using PriceCalculatorKata.Entities;
 using PriceCalculatorKata.Interfaces;
+using PriceCalculatorKata.Repositories;
 
 namespace PriceCalculatorKata
 {
-    public class PriceCalculator : ICalculateTaxAndDiscount, IPrintInfo
+    public class PriceCalculator : ICalculate, IPrintInfo
     {
         private double taxPercentage { get; set; }
         private double discountPercentage { get; set; }
         private double upcDiscountPercentage { get; set; }
+        private UPCRepo upcRepo=new UPCRepo();
+        private CostRepo costRepo = new CostRepo();
         private float currPrice = 0;
         private float currTax = 0;
         private float currUniDiscount = 0;
@@ -35,9 +39,14 @@ namespace PriceCalculatorKata
                 currTax = CalculatePercentage(taxPercentage, product.price);
                 currUniDiscount = CalculatePercentage(discountPercentage, product.price);
                 currUPCDiscount=CalculatePercentage(upcDiscountPercentage, product.price);
-                currPrice = currTax;
+                currPrice =(float) product.price+currTax;
                 currPrice = currPrice - currUniDiscount;
                 currPrice = currPrice - currUPCDiscount;
+                IEnumerable<Cost> list = costRepo.costRepo.Select(cost => cost).Where(cost => cost.upc == product.UPC);
+                foreach (Cost c in list)
+                {
+                   currPrice += c.isPercent ? (float)(product.price * c.amount) : (float)(c.amount);  
+                }
             }
             else
             {
@@ -47,6 +56,11 @@ namespace PriceCalculatorKata
                 currUniDiscount = CalculatePercentage(discountPercentage, currPrice);
                 currPrice = currPrice + currTax;
                 currPrice = currPrice - currUniDiscount;
+                IEnumerable<Cost> list = costRepo.costRepo.Select(cost => cost).Where(cost => cost.upc == product.UPC);
+                foreach (Cost c in list)
+                {
+                    currPrice += c.isPercent ? (float)(product.price * c.amount) : (float)(c.amount);
+                }
             }
           
             return (float)Math.Round(currPrice,2);
@@ -58,10 +72,10 @@ namespace PriceCalculatorKata
             currTax = 0;
             currUniDiscount = 0;
         }
-        public string PrintInfo(UPCRepo repo)
+        public string PrintInfo()
         {
-            UPCDiscount upcD =null;
-            foreach (UPCDiscount upc in repo.upcRepo)
+            UPCDiscount? upcD =null;
+            foreach (UPCDiscount upc in upcRepo.upcRepo)
             {
                 if (upc.UPC == product.UPC)
                 {
@@ -80,18 +94,21 @@ namespace PriceCalculatorKata
                 upcDiscountPercentage = 0;
             }
             float total = TotalPriceAfter(beforeOrAfter);
-            return $"Sample product: Book with name = “{product.Name}”, UPC={product.UPC}, price=${product.price}, \n" +
-                $"Tax={taxPercentage*100}%,universal discount={discountPercentage*100}%,UPC-Discount={Math.Round(upcDiscountPercentage*100,2)}% for UPC={product.UPC} \n" +
-                $"Tax Amount= {currTax}$, Universal Discount Amount={currUniDiscount}$, UPC Discount={currUPCDiscount}$ \n" +
-                $"Price Before= ${product.price} Price After= ${total} \n" +
-                $"Total Discount Amount={currUniDiscount+currUPCDiscount}$";
+            return Report(total);
         }
 
-        public string Report()
+        public string Report(float total)
         {
-            return $"Tax = {taxPercentage*100}%, discount = {discountPercentage*100}% \n" +
-                $"Program prints price ${product.price} \n" +
-                $"Program displays ${currUniDiscount+currUPCDiscount} amount which was deduced";
+            string report= $"Cost = ${product.price} \n" +
+                $"Tax = ${currTax} \n" +
+                $"Discounts = ${currUPCDiscount + currUniDiscount} \n";
+                IEnumerable<Cost> list = costRepo.costRepo.Select(cost => cost).Where(cost=>cost.upc==product.UPC);
+                 foreach (Cost cost in list)
+            {
+                report += cost.description + ": " + (cost.isPercent ? Math.Round(cost.amount * product.price,2) : Math.Round(cost.amount,2)) + " \n";
+            }
+                report += $"TOTAL = ${total} \n";
+            return report;
         }
 
     }

@@ -8,7 +8,6 @@ namespace PriceCalculatorKata.Interfaces
 {
     public interface IPrintInfo
     {
-        public string PrintInfo(UPCRepo repo);
-        public string Report();
+        public string PrintInfo();
     }
 }
