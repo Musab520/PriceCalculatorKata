@@ -9,5 +9,6 @@ namespace PriceCalculatorKata.Interfaces
     public interface IPrintInfo
     {
         public string PrintInfo();
+        public string Report();
     }
 }

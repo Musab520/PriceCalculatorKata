@@ -40,5 +40,13 @@ namespace PriceCalculatorKata
                 $"Tax={taxPercentage},discount={discount}, Tax Amount= {tax}, Discount Amount={discount}, \n" +
                 $"Price Before= ${product.price} Price After= ${TotalPriceAfter(tax,discount,product.price)}";
         }
+
+        public string Report()
+        {
+            return $"Tax = {taxPercentage*100}%, discount = {discountPercentage*100}% \n" +
+                $"Program prints price ${product.price} \n" +
+                $"Program displays ${discount} amount which was deduced";
+        }
+
     }
 }
