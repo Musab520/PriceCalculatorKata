@@ -16,80 +16,75 @@ namespace PriceCalculatorKata
         private double upcDiscountPercentage { get; set; }
         private UPCRepo upcRepo=new UPCRepo();
         private CostRepo costRepo = new CostRepo();
-        private Cap cap = new Cap(0.2,true);
-        private float currPrice = 0;
-        private float currTax = 0;
-        private float currUniDiscount = 0;
-        private float currUPCDiscount = 0;
+        private Cap cap = new Cap(0.5,true);
+        private double currPrice = 0;
+        private double currTax = 0;
+        private double currUniDiscount = 0;
+        private double currUPCDiscount = 0;
         private Product product { get;set; }
-        public PriceCalculator(double taxPercentage,double discountPercentage,Product p)
+        private bool AdditiveOrMultiplicative { get; set; }
+        public PriceCalculator(double taxPercentage,double discountPercentage,Product p,bool add)
         {
             this.taxPercentage = taxPercentage;
             this.discountPercentage = discountPercentage;   
             product=p;
+            AdditiveOrMultiplicative = add;
         }
-        public float CalculatePercentage(double percentage, double price)
+        public double CalculatePercentage(double percentage, double price)
         {
-            return (float)Math.Round(price * percentage, 2);
+            return Math.Round(price * percentage, 4);
         }
-        public float TotalPriceAfter(bool beforeOrafter)
+        public double TotalPriceAfter(bool beforeOrafter)
         {
             ClearValues();
             if (beforeOrafter)
             {
-                Console.WriteLine("Apply Additive or Multiplicative? \n 1. Additive \n 2. Multiplicative ");
-                string? choice = Console.ReadLine();
-                while (choice == null && (!choice.Equals("1") || !choice.Equals("2")))
-                {
-                    Console.WriteLine("Please enter 1 or 2");
-                    choice = Console.ReadLine();
-                }
                 currTax = CalculatePercentage(taxPercentage, product.price);
-                currPrice =(float) product.price+currTax;
-                if (choice.Equals("1")) { AdditiveDiscounts(); } else { MultiplicativeDiscounts(); };
+                currPrice = Math.Round(product.price+currTax,4);
+                if (AdditiveOrMultiplicative) { AdditiveDiscounts(); } else { MultiplicativeDiscounts(); };
                 IEnumerable<Cost> list = costRepo.costRepo.Select(cost => cost).Where(cost => cost.upc == product.UPC);
                 foreach (Cost c in list)
                 {
-                   currPrice += c.isPercent ? (float)(product.price * c.amount) : (float)(c.amount);  
+                   currPrice += c.isPercent ? (product.price * c.amount) : (c.amount);  
                 }
             }
             else
             {
                 MultiplicativeDiscounts();
-                float capper = cap.isPercent ? (float)(cap.amount * product.price) : (float)cap.amount;
+                double capper = cap.isPercent ? (cap.amount * product.price) : cap.amount;
                 currUniDiscount = CalculatePercentage(discountPercentage, currPrice);
-                currPrice = currUniDiscount + currUPCDiscount <= capper ? currPrice - currUniDiscount : (float)product.price - capper;
+                currPrice = currUniDiscount + currUPCDiscount <= capper ? Math.Round(currPrice - currUniDiscount,4) : Math.Round(product.price - capper,4);
                 currTax = CalculatePercentage(taxPercentage, currPrice);
-                currPrice = currPrice + currTax;
+                currPrice = Math.Round(currPrice + currTax,4);
                 IEnumerable<Cost> list = costRepo.costRepo.Select(cost => cost).Where(cost => cost.upc == product.UPC);
                 foreach (Cost c in list)
                 {
-                    currPrice += c.isPercent ? (float)(product.price * c.amount) : (float)(c.amount);
+                    currPrice += c.isPercent ? Math.Round((product.price * c.amount),4) : (c.amount);
                 }
             }
           
-            return (float)Math.Round(currPrice,2);
+            return Math.Round(currPrice,2);
         }
         public void AdditiveDiscounts()
         {
             currUniDiscount = CalculatePercentage(discountPercentage, product.price);
             currUPCDiscount = CalculatePercentage(upcDiscountPercentage, product.price);
-            float capper = cap.isPercent ? (float)(cap.amount * product.price) : (float)cap.amount;
+            double capper = cap.isPercent ? (cap.amount * product.price) : cap.amount;
             if (currUniDiscount + currUPCDiscount <= capper)
             {
-                currPrice = currPrice - currUniDiscount;
-                currPrice = currPrice - currUPCDiscount;
+                currPrice = Math.Round(currPrice - currUniDiscount,4);
+                currPrice = Math.Round(currPrice - currUPCDiscount,4);
             }
             else
             {
-                currPrice -= capper;
+                currPrice = Math.Round(currPrice - capper,4);
             }
         }
 
         public void MultiplicativeDiscounts()
         {
             currUPCDiscount = CalculatePercentage(upcDiscountPercentage, product.price);
-            currPrice = (float)product.price - currUPCDiscount;
+            currPrice = product.price - currUPCDiscount;
         }
         public void ClearValues()
         {
@@ -119,23 +114,23 @@ namespace PriceCalculatorKata
             {
                 upcDiscountPercentage = 0;
             }
-            float total = TotalPriceAfter(beforeOrAfter);
+            double total = TotalPriceAfter(beforeOrAfter);
             return Report(total);
         }
 
-        public string Report(float total)
+        public string Report(double total)
         {
-            float capper = cap.isPercent ? (float)(cap.amount * product.price) : (float)cap.amount;
-            float totalDiscounts= capper>=currUniDiscount+currUPCDiscount ? currUniDiscount + currUPCDiscount : capper;
-            string report= $"Cost = ${product.price} {product.currency} \n" +
-                $"Tax = ${currTax} {product.currency} \n" +
-                $"Discounts = ${ totalDiscounts } {product.currency} \n";
+            double capper = cap.isPercent ? (cap.amount * product.price) : cap.amount;
+            double totalDiscounts= capper>=currUniDiscount+currUPCDiscount ? currUniDiscount + currUPCDiscount : capper;
+            string report= $"Cost = ${Math.Round(product.price,2)} {product.currency} \n" +
+                $"Tax = ${Math.Round(currTax,2)} {product.currency} \n" +
+                $"Discounts = ${ Math.Round(totalDiscounts,2) } {product.currency} \n";
                 IEnumerable<Cost> list = costRepo.costRepo.Select(cost => cost).Where(cost=>cost.upc==product.UPC);
                  foreach (Cost cost in list)
             {
                 report += cost.description + ": " + (cost.isPercent ? Math.Round(cost.amount * product.price,2) : Math.Round(cost.amount,2)) + ""+ product.currency +"\n";
             }
-                report += $"TOTAL = ${total} {product.currency} \n";
+                report += $"TOTAL = ${Math.Round(total, 4)} {product.currency} \n";
             return report;
         }
 
