@@ -5,7 +5,7 @@ class Program
 {
     public static void Main()
     {
-        Product p1 = new Product("Gamestop", 12345, 20.25);
+        Product p1 = new Product("Game", 12345, 20.25,"GDP");
         PriceCalculator calc=new PriceCalculator(0.21,0.15,p1);
         UPCRepo repo=new UPCRepo();
         Console.WriteLine(calc.PrintInfo());

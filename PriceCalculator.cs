@@ -127,15 +127,15 @@ namespace PriceCalculatorKata
         {
             float capper = cap.isPercent ? (float)(cap.amount * product.price) : (float)cap.amount;
             float totalDiscounts= capper>=currUniDiscount+currUPCDiscount ? currUniDiscount + currUPCDiscount : capper;
-            string report= $"Cost = ${product.price} \n" +
-                $"Tax = ${currTax} \n" +
-                $"Discounts = ${ totalDiscounts } \n";
+            string report= $"Cost = ${product.price} {product.currency} \n" +
+                $"Tax = ${currTax} {product.currency} \n" +
+                $"Discounts = ${ totalDiscounts } {product.currency} \n";
                 IEnumerable<Cost> list = costRepo.costRepo.Select(cost => cost).Where(cost=>cost.upc==product.UPC);
                  foreach (Cost cost in list)
             {
-                report += cost.description + ": " + (cost.isPercent ? Math.Round(cost.amount * product.price,2) : Math.Round(cost.amount,2)) + " \n";
+                report += cost.description + ": " + (cost.isPercent ? Math.Round(cost.amount * product.price,2) : Math.Round(cost.amount,2)) + ""+ product.currency +"\n";
             }
-                report += $"TOTAL = ${total} \n";
+                report += $"TOTAL = ${total} {product.currency} \n";
             return report;
         }
 
