@@ -36,9 +36,15 @@ namespace PriceCalculatorKata
             ClearValues();
             if (beforeOrafter)
             {
+                Console.WriteLine("Apply Additive or Multiplicative? \n 1. Additive \n 2. Multiplicative ");
+                string? choice = Console.ReadLine();
+                while (choice == null && (!choice.Equals("1") || !choice.Equals("2")))
+                {
+                    Console.WriteLine("Please enter 1 or 2");
+                    choice = Console.ReadLine();
+                }
                 currTax = CalculatePercentage(taxPercentage, product.price);
-                currUniDiscount = CalculatePercentage(discountPercentage, product.price);
-                currUPCDiscount=CalculatePercentage(upcDiscountPercentage, product.price);
+                if (choice.Equals("1")) { AdditiveDiscounts(); } else { MultiplicativeDiscounts();};
                 currPrice =(float) product.price+currTax;
                 currPrice = currPrice - currUniDiscount;
                 currPrice = currPrice - currUPCDiscount;
@@ -50,10 +56,8 @@ namespace PriceCalculatorKata
             }
             else
             {
-                currUPCDiscount = CalculatePercentage(upcDiscountPercentage, product.price);
-                currPrice = (float)product.price - CalculatePercentage(upcDiscountPercentage,product.price);
+                MultiplicativeDiscounts();
                 currTax = CalculatePercentage(taxPercentage, currPrice);
-                currUniDiscount = CalculatePercentage(discountPercentage, currPrice);
                 currPrice = currPrice + currTax;
                 currPrice = currPrice - currUniDiscount;
                 IEnumerable<Cost> list = costRepo.costRepo.Select(cost => cost).Where(cost => cost.upc == product.UPC);
@@ -64,6 +68,18 @@ namespace PriceCalculatorKata
             }
           
             return (float)Math.Round(currPrice,2);
+        }
+        public void AdditiveDiscounts()
+        {
+            currUniDiscount = CalculatePercentage(discountPercentage, product.price);
+            currUPCDiscount = CalculatePercentage(upcDiscountPercentage, product.price);
+        }
+
+        public void MultiplicativeDiscounts()
+        {
+            currUPCDiscount = CalculatePercentage(upcDiscountPercentage, product.price);
+            currPrice = (float)product.price - CalculatePercentage(upcDiscountPercentage, product.price);
+            currUniDiscount = CalculatePercentage(discountPercentage, currPrice);
         }
         public void ClearValues()
         {
