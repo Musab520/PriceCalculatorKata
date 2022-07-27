@@ -11,7 +11,7 @@ namespace PriceCalculatorKata.Repositories
     {
         public List<Cost> costRepo = new List<Cost>
         {
-            new Cost("Transport Cost",2.2,12345,false),new Cost("Packaging Cost",0.01,12345,true)
+            new Cost("Transport Cost",2.2,12346,false),new Cost("Packaging Cost",0.01,12346,true)
         };
     }
 }
