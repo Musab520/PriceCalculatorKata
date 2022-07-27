@@ -8,7 +8,7 @@ namespace PriceCalculatorKata.Interfaces
 {
     public interface ICalculate
     {
-        public float CalculatePercentage(double percentage, double price);
-        public float TotalPriceAfter(bool beforOrAfter);
+        public double CalculatePercentage(double percentage, double price);
+        public double TotalPriceAfter(bool beforOrAfter);
     }
 }
